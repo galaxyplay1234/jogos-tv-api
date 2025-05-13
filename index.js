@@ -18,15 +18,14 @@ app.get("/jogos", async (req, res) => {
     const body = $("body");
 
     let html = "";
-    let currentDate = "";
 
     body.find("h3, table").each((_, el) => {
       const tag = $(el)[0].tagName;
       const text = $(el).text().trim();
 
-      if (tag === "h3" && /\d{1,2} de \w+ de \d{4}/.test(text)) {
-        currentDate = text;
-        html += `<h3 style="margin-top:40px; color:#2c3e50;">${currentDate}</h3>`;
+      if (tag === "h3") {
+        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
+        console.log("H3 encontrado:", text);
       }
 
       if (tag === "table") {
@@ -35,7 +34,7 @@ app.get("/jogos", async (req, res) => {
     });
 
     if (!html) {
-      return res.send("<p>Conteúdo não encontrado (nenhuma <h3> ou <table> encontrada).</p>");
+      return res.send("<p>Nenhum conteúdo <h3> ou <table> encontrado.</p>");
     }
 
     const styledHtml = `
