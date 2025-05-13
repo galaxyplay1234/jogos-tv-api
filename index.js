@@ -4,8 +4,30 @@ const cheerio = require("cheerio");
 
 const app = express();
 
+let cache = {
+  timestamp: 0,
+  html: ""
+};
+
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos em ms
+
+function formatarDataHoje() {
+  const hoje = new Date();
+  const meses = [
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+  ];
+  return `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
+}
+
 app.get("/jogos", async (req, res) => {
   try {
+    const agora = Date.now();
+
+    if (cache.html && agora - cache.timestamp < CACHE_DURATION) {
+      return res.send(cache.html); // Serve do cache
+    }
+
     const url = "https://tudonumclick.com/futebol/jogos-na-tv/";
     const { data } = await axios.get(url, {
       headers: {
@@ -17,15 +39,23 @@ app.get("/jogos", async (req, res) => {
     const $ = cheerio.load(data);
     const body = $("body");
 
+    const dataHoje = formatarDataHoje().toLowerCase();
     let html = "";
 
     body.find("h3, table").each((_, el) => {
       const tag = $(el)[0].tagName;
-      const text = $(el).text().trim();
+      const texto = $(el).text().trim();
 
       if (tag === "h3") {
-        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
-        console.log("H3 encontrado:", text);
+        const textoLower = texto.toLowerCase();
+
+        const ehData = /\d{1,2}( de)? (janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)( de)? \d{4}/.test(textoLower)
+                     || /\d{2}\/\d{2}\/\d{4}/.test(textoLower);
+
+        if (ehData) {
+          const destaque = textoLower.includes(dataHoje) ? "atual" : "";
+          html += `<h3 class="data ${destaque}">${texto}</h3>`;
+        }
       }
 
       if (tag === "table") {
@@ -34,7 +64,7 @@ app.get("/jogos", async (req, res) => {
     });
 
     if (!html) {
-      return res.send("<p>Nenhum conteúdo <h3> ou <table> encontrado.</p>");
+      return res.send("<p>Nenhum conteúdo encontrado.</p>");
     }
 
     const styledHtml = `
@@ -57,13 +87,18 @@ app.get("/jogos", async (req, res) => {
             color: #2c3e50;
           }
 
-          h3 {
+          h3.data {
             margin-top: 40px;
-            margin-bottom: 10px;
             font-size: 20px;
-            color: #2c3e50;
             border-bottom: 2px solid #ccc;
             padding-bottom: 5px;
+          }
+
+          h3.atual {
+            background-color: #dff0d8;
+            padding: 10px;
+            border-radius: 5px;
+            color: #2e7d32;
           }
 
           table {
@@ -107,6 +142,9 @@ app.get("/jogos", async (req, res) => {
       </body>
       </html>
     `;
+
+    cache.html = styledHtml;
+    cache.timestamp = agora;
 
     res.send(styledHtml);
   } catch (error) {
