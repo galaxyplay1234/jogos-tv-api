@@ -15,26 +15,16 @@ app.get("/jogos", async (req, res) => {
     });
 
     const $ = cheerio.load(data);
+    const tabelas = $("table");
 
     let html = "";
-    let dentro = false;
 
-    $("main").find("p, table, h3, h2").each((_, el) => {
-      const tag = $(el).get(0).tagName;
-      const text = $(el).text().trim();
-
-      if (tag === "p" && /\d{1,2} de /.test(text)) {
-        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
-        dentro = true;
-      }
-
-      if (tag === "table" && dentro) {
-        html += $.html(el);
-      }
+    tabelas.each((_, el) => {
+      html += $.html(el);
     });
 
     if (!html) {
-      return res.send("<p style='color:red;'>Nenhum conteúdo encontrado. A estrutura do site pode ter mudado.</p>");
+      return res.send("<p>Nenhuma tabela encontrada na página.</p>");
     }
 
     const styledHtml = `
@@ -57,15 +47,10 @@ app.get("/jogos", async (req, res) => {
             color: #2c3e50;
           }
 
-          h3 {
-            margin-top: 40px;
-            color: #2c3e50;
-          }
-
           table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0 40px 0;
+            margin: 20px 0;
             background-color: #ffffff;
             border-radius: 8px;
             overflow: hidden;
