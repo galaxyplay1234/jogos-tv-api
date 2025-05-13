@@ -20,12 +20,18 @@ app.get("/jogos", async (req, res) => {
     let html = "";
     let currentDate = ""; // Variável para armazenar a data atual
 
+    console.log("Conteúdo da página:", content.html()); // Depuração: log do conteúdo da página
+
     content.children().each((_, el) => {
       const tag = $(el)[0].tagName;
       const text = $(el).text().trim();
 
-      // Captura as datas nas tags <h3>
+      // Depuração: log de todas as tags
+      console.log(`Tag: ${tag}, Texto: ${text}`);
+
+      // Captura as datas nas tags <h3> (se o conteúdo corresponder ao formato de data)
       if (tag === "h3" && /\d{1,2} de \w+ de \d{4}/.test(text)) {
+        console.log(`Data encontrada: ${text}`); // Log de data encontrada
         currentDate = text; // Atribui a data à variável
         html += `<h3 style="margin-top:40px; color:#2c3e50;">${currentDate}</h3>`;
       }
