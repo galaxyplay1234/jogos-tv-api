@@ -5,29 +5,20 @@ const cheerio = require("cheerio");
 const app = express();
 
 let cache = {
+  html: null,
   timestamp: 0,
-  html: ""
 };
 
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos em ms
-
-function formatarDataHoje() {
-  const hoje = new Date();
-  const meses = [
-    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
-  ];
-  return `${hoje.getDate()} de ${meses[hoje.getMonth()]} de ${hoje.getFullYear()}`;
-}
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos
 
 app.get("/jogos", async (req, res) => {
+  const agora = Date.now();
+
+  if (cache.html && agora - cache.timestamp < CACHE_DURATION) {
+    return res.send(cache.html);
+  }
+
   try {
-    const agora = Date.now();
-
-    if (cache.html && agora - cache.timestamp < CACHE_DURATION) {
-      return res.send(cache.html); // Serve do cache
-    }
-
     const url = "https://tudonumclick.com/futebol/jogos-na-tv/";
     const { data } = await axios.get(url, {
       headers: {
@@ -37,13 +28,19 @@ app.get("/jogos", async (req, res) => {
     });
 
     const $ = cheerio.load(data);
-    const body = $("body");
+    const content = $(".entry-content").children();
 
-    const dataHoje = formatarDataHoje().toLowerCase();
     let html = "";
 
-    body.find("h3, table").each((_, el) => {
-      const tag = $(el)[0].tagName;
+    const hoje = new Date();
+    const dataHoje = hoje.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    }).toLowerCase();
+
+    content.each((_, el) => {
+      const tag = $(el).prop("tagName")?.toLowerCase();
       const texto = $(el).text().trim();
 
       if (tag === "h3") {
@@ -52,10 +49,8 @@ app.get("/jogos", async (req, res) => {
         const ehData = /\d{1,2}( de)? (janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)( de)? \d{4}/.test(textoLower)
                      || /\d{2}\/\d{2}\/\d{4}/.test(textoLower);
 
-        if (ehData) {
-          const destaque = textoLower.includes(dataHoje) ? "atual" : "";
-          html += `<h3 class="data ${destaque}">${texto}</h3>`;
-        }
+        const destaque = ehData && textoLower.includes(dataHoje) ? "atual" : "";
+        html += `<h3 class="data ${destaque}">${texto}</h3>`;
       }
 
       if (tag === "table") {
@@ -64,7 +59,7 @@ app.get("/jogos", async (req, res) => {
     });
 
     if (!html) {
-      return res.send("<p>Nenhum conteúdo encontrado.</p>");
+      return res.send("<p>Conteúdo não encontrado.</p>");
     }
 
     const styledHtml = `
@@ -90,21 +85,20 @@ app.get("/jogos", async (req, res) => {
           h3.data {
             margin-top: 40px;
             font-size: 20px;
+            color: #34495e;
             border-bottom: 2px solid #ccc;
             padding-bottom: 5px;
           }
 
-          h3.atual {
-            background-color: #dff0d8;
-            padding: 10px;
-            border-radius: 5px;
-            color: #2e7d32;
+          h3.data.atual {
+            color: #e74c3c;
+            border-color: #e74c3c;
           }
 
           table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0 40px 0;
+            margin: 20px 0;
             background-color: #ffffff;
             border-radius: 8px;
             overflow: hidden;
