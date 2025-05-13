@@ -15,25 +15,26 @@ app.get("/jogos", async (req, res) => {
     });
 
     const $ = cheerio.load(data);
-    const content = $(".entry-content").children();
 
     let html = "";
+    let dentro = false;
 
-    content.each((_, el) => {
+    $("main").find("p, table, h3, h2").each((_, el) => {
       const tag = $(el).get(0).tagName;
+      const text = $(el).text().trim();
 
-      if (tag === "p" && $(el).text().match(/\d{1,2} de /)) {
-        // Provavelmente é uma data
-        html += `<h3 style="margin-top:40px; color:#2c3e50;">${$(el).text()}</h3>`;
+      if (tag === "p" && /\d{1,2} de /.test(text)) {
+        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
+        dentro = true;
       }
 
-      if (tag === "table") {
+      if (tag === "table" && dentro) {
         html += $.html(el);
       }
     });
 
     if (!html) {
-      return res.send("<p>Nenhum conteúdo encontrado na página.</p>");
+      return res.send("<p style='color:red;'>Nenhum conteúdo encontrado. A estrutura do site pode ter mudado.</p>");
     }
 
     const styledHtml = `
