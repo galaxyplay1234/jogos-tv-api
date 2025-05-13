@@ -18,16 +18,19 @@ app.get("/jogos", async (req, res) => {
     const content = $(".entry-content");
 
     let html = "";
+    let currentDate = ""; // Variável para armazenar a data atual
+
     content.children().each((_, el) => {
       const tag = $(el)[0].tagName;
       const text = $(el).text().trim();
 
-      // Captura as datas em <h3>
+      // Captura as datas nas tags <h3>
       if (tag === "h3" && /\d{1,2} de \w+ de \d{4}/.test(text)) {
-        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
+        currentDate = text; // Atribui a data à variável
+        html += `<h3 style="margin-top:40px; color:#2c3e50;">${currentDate}</h3>`;
       }
 
-      // Captura as tabelas em <table>
+      // Captura as tabelas nas tags <table>
       if (tag === "table") {
         html += $.html(el);
       }
