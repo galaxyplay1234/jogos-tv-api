@@ -27,7 +27,6 @@ app.get("/jogos", async (req, res) => {
       return res.send("<p>Nenhuma tabela encontrada na página.</p>");
     }
 
-    // CSS embutido na resposta
     const styledHtml = `
       <!DOCTYPE html>
       <html lang="pt-br">
@@ -36,31 +35,50 @@ app.get("/jogos", async (req, res) => {
         <title>Jogos na TV</title>
         <style>
           body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: #f0f2f5;
+            color: #333;
           }
+
+          h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+          }
+
           table {
             width: 100%;
             border-collapse: collapse;
             margin: 20px 0;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            table-layout: fixed;
           }
+
           th, td {
-            padding: 10px;
-            border: 1px solid #ddd;
+            padding: 12px 16px;
             text-align: center;
+            vertical-align: middle;
+            border: 1px solid #eaeaea;
+            word-wrap: break-word;
           }
+
           th {
-            background-color: #f8f8f8;
-            color: #333;
+            background-color: #2980b9;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
           }
+
           tr:nth-child(even) {
             background-color: #f9f9f9;
           }
+
           tr:hover {
-            background-color: #f1f1f1;
+            background-color: #eef6ff;
           }
         </style>
       </head>
