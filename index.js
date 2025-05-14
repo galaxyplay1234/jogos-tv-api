@@ -1,21 +1,10 @@
 const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
+
 const app = express();
 
-const cache = {
-  data: null,
-  timestamp: 0,
-};
-
 app.get("/jogos", async (req, res) => {
-  const agora = Date.now();
-
-  // Se o cache for recente (menos de 15 minutos), retorna ele
-  if (cache.data && agora - cache.timestamp < 15 * 60 * 1000) {
-    return res.send(cache.data);
-  }
-
   try {
     const url = "https://tudonumclick.com/futebol/jogos-na-tv/";
     const { data } = await axios.get(url, {
@@ -26,35 +15,43 @@ app.get("/jogos", async (req, res) => {
     });
 
     const $ = cheerio.load(data);
-    const content = $(".entry-content");
+    const body = $("body");
 
     let html = "";
 
-    content.children("h3, table").each((_, el) => {
+    body.find("h3, table").each((_, el) => {
       const tag = $(el)[0].tagName;
+      const text = $(el).text().trim();
+
       if (tag === "h3") {
-        const dataTexto = $(el).text().trim();
-        html += `<h3 style="margin-top:40px; color:#2c3e50;">${dataTexto}</h3>`;
+        html += `<h3 style="margin-top:40px; color:#2c3e50;"></h3>`;
       }
 
       if (tag === "table") {
-        // Ajustar horários do Brasil (GMT-4) se necessário no conteúdo da tabela
-        let tabela = $(el).html();
-        tabela = tabela.replace(/(\d{2}):(\d{2})/g, (match, h, m) => {
-          const date = new Date();
-          date.setUTCHours(parseInt(h), parseInt(m));
-          date.setUTCHours(date.getUTCHours() - 4); // Ajuste para GMT-4
-          const horas = date.getHours().toString().padStart(2, '0');
-          const minutos = date.getMinutes().toString().padStart(2, '0');
-          return `${horas}:${minutos}`;
+        const table = $(el).clone();
+
+        table.find("td").each((_, cell) => {
+          const text = $(cell).text().trim();
+          const match = text.match(/^(\d{1,2}):(\d{2})$/);
+
+          if (match) {
+            let hour = parseInt(match[1]);
+            let minute = parseInt(match[2]);
+
+            // Converte o horário para GMT-4
+            hour = (hour - 4 + 24) % 24;
+
+            const newTime = `:`;
+            $(cell).text(newTime);
+          }
         });
 
-        html += `<table>${tabela}</table>`;
+        html += $.html(table);
       }
     });
 
     if (!html) {
-      return res.send("<p>Nenhum conteúdo encontrado.</p>");
+      return res.send("<p>Nenhum conteúdo <h3> ou <table> encontrado.</p>");
     }
 
     const styledHtml = `
@@ -123,14 +120,10 @@ app.get("/jogos", async (req, res) => {
       </head>
       <body>
         <h2>Jogos na TV - Atualizado automaticamente</h2>
-        ${html}
+        
       </body>
       </html>
     `;
-
-    // Salva no cache
-    cache.data = styledHtml;
-    cache.timestamp = agora;
 
     res.send(styledHtml);
   } catch (error) {
@@ -142,5 +135,3 @@ app.get("/jogos", async (req, res) => {
 app.get("/", (req, res) => {
   res.send("API funcionando. Acesse <a href='/jogos'>/jogos</a>");
 });
-
-module.exports = app;
