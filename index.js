@@ -103,6 +103,16 @@ app.get("/jogos", async (req, res) => {
     border: 1px solid #eaeaea;
     word-wrap: break-word;
   }
+  
+  td a {
+  text-decoration: none;
+  color: #2ecc71; /* verde suave */
+  font-weight: bold;
+}
+
+td a:hover {
+  color: #27ae60; /* verde um pouco mais escuro ao passar o mouse */
+}
 
   th {
     background-color: #2980b9;
@@ -126,7 +136,7 @@ app.get("/jogos", async (req, res) => {
 
   td:nth-child(2), td:nth-child(3), td:nth-child(4),
   th:nth-child(2), th:nth-child(3), th:nth-child(4) {
-    width: 27,33%;
+    width: 27.33%;
   }
 
   /* Responsividade */
