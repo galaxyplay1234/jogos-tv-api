@@ -24,7 +24,7 @@ app.get("/jogos", async (req, res) => {
       const text = $(el).text().trim();
 
       if (tag === "h3") {
-        html += `<h3 style="margin-top:40px; color:#2c3e50;"></h3>`;
+        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
       }
 
       if (tag === "table") {
@@ -41,8 +41,8 @@ app.get("/jogos", async (req, res) => {
             // Converte o horário para GMT-4
             hour = (hour - 4 + 24) % 24;
 
-            const newTime = `:`;
-            $(cell).text(newTime);
+            const newTime = `${hour}:${minute < 10 ? '0' : ''}${minute}`; // Ajusta a hora com 2 dígitos se necessário
+            $(cell).text(newTime); // Substitui o texto da célula com o horário ajustado
           }
         });
 
@@ -120,7 +120,7 @@ app.get("/jogos", async (req, res) => {
       </head>
       <body>
         <h2>Jogos na TV - Atualizado automaticamente</h2>
-        
+        ${html}
       </body>
       </html>
     `;
@@ -135,3 +135,5 @@ app.get("/jogos", async (req, res) => {
 app.get("/", (req, res) => {
   res.send("API funcionando. Acesse <a href='/jogos'>/jogos</a>");
 });
+
+module.exports = app;
