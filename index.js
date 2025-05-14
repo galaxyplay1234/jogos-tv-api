@@ -24,7 +24,7 @@ app.get("/jogos", async (req, res) => {
       const text = $(el).text().trim();
 
       if (tag === "h3") {
-        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
+        html += `<h3 style="margin-top:40px; color:#2c3e50;"></h3>`;
       }
 
       if (tag === "table") {
@@ -41,8 +41,11 @@ app.get("/jogos", async (req, res) => {
             // Converte o horário para GMT-4
             hour = (hour - 4 + 24) % 24;
 
-            const newTime = `${hour}:${minute < 10 ? '0' : ''}${minute}`; // Ajusta a hora com 2 dígitos se necessário
-            $(cell).text(newTime); // Substitui o texto da célula com o horário ajustado
+            const newTime = `${hour}:${minute < 10 ? "0" + minute : minute}`;
+            $(cell).text(newTime);
+
+            // Adiciona a classe "horario" para ajustar a largura
+            $(cell).addClass('horario');
           }
         });
 
@@ -60,14 +63,12 @@ app.get("/jogos", async (req, res) => {
       <head>
         <meta charset="UTF-8">
         <title>Jogos na TV</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
             background-color: #f0f2f5;
             color: #333;
-            margin: 0;
           }
 
           h2 {
@@ -119,37 +120,10 @@ app.get("/jogos", async (req, res) => {
             background-color: #eef6ff;
           }
 
-          /* Responsividade */
-          @media screen and (max-width: 768px) {
-            body {
-              padding: 10px;
-            }
-
-            table, th, td {
-              font-size: 14px;
-            }
-
-            h2 {
-              font-size: 24px;
-            }
-
-            h3 {
-              font-size: 18px;
-            }
-          }
-
-          @media screen and (max-width: 480px) {
-            table, th, td {
-              font-size: 12px;
-            }
-
-            h2 {
-              font-size: 20px;
-            }
-
-            h3 {
-              font-size: 16px;
-            }
+          /* Estilo para a coluna de horário */
+          td.horario {
+            width: 80px; /* Ajuste conforme necessário */
+            text-align: center;
           }
         </style>
       </head>
