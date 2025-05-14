@@ -60,12 +60,14 @@ app.get("/jogos", async (req, res) => {
       <head>
         <meta charset="UTF-8">
         <title>Jogos na TV</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             padding: 20px;
             background-color: #f0f2f5;
             color: #333;
+            margin: 0;
           }
 
           h2 {
@@ -115,6 +117,39 @@ app.get("/jogos", async (req, res) => {
 
           tr:hover {
             background-color: #eef6ff;
+          }
+
+          /* Responsividade */
+          @media screen and (max-width: 768px) {
+            body {
+              padding: 10px;
+            }
+
+            table, th, td {
+              font-size: 14px;
+            }
+
+            h2 {
+              font-size: 24px;
+            }
+
+            h3 {
+              font-size: 18px;
+            }
+          }
+
+          @media screen and (max-width: 480px) {
+            table, th, td {
+              font-size: 12px;
+            }
+
+            h2 {
+              font-size: 20px;
+            }
+
+            h3 {
+              font-size: 16px;
+            }
           }
         </style>
       </head>
