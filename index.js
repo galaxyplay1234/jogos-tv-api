@@ -4,6 +4,7 @@ const cheerio = require("cheerio");
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -15,15 +16,15 @@ app.get("/jogos", async (req, res) => {
     const { data } = await axios.get(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36"
-      }
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
+      },
     });
 
     const $ = cheerio.load(data);
     const body = $("body");
 
     const blocos = [];
-    let dataAtual = null;
+    let dataAtual = "";
 
     body.find("h3, table").each((_, el) => {
       const tag = $(el)[0].tagName;
@@ -32,25 +33,30 @@ app.get("/jogos", async (req, res) => {
         dataAtual = $(el).text().trim();
       }
 
-      if (tag === "table" && dataAtual) {
-        const rows = $(el).find("tr");
-        rows.each((i, row) => {
-          const cols = $(row).find("td");
-          if (cols.length > 0) {
+      if (tag === "table") {
+        $(el)
+          .find("tr")
+          .each((i, row) => {
+            if (i === 0) return; // pula o cabeçalho
+
+            const cols = $(row).find("td");
+            if (cols.length < 2) return;
+
             let hora = $(cols[0]).text().trim();
-            const timeInUTC = dayjs.utc(`${dataAtual} ${hora}`, "DD/MM/YYYY HH:mm");
+
+            const dataExtraida = dataAtual.match(/\d{2}\/\d{2}\/\d{4}/)?.[0];
+            if (!dataExtraida || !hora) return;
+
+            const timeInUTC = dayjs.utc(`${dataExtraida} ${hora}`, "DD/MM/YYYY HH:mm");
+            if (!timeInUTC.isValid()) return;
+
             const timeInBR = timeInUTC.tz("America/Sao_Paulo");
             const novaData = timeInBR.format("DD/MM/YYYY");
             const novaHora = timeInBR.format("HH:mm");
 
-            // Substitui a hora antiga pela nova
             $(cols[0]).text(novaHora);
-
             blocos.push({ data: novaData, row: $.html(row) });
-          } else {
-            blocos.push({ data: dataAtual, row: $.html(row) });
-          }
-        });
+          });
       }
     });
 
@@ -59,28 +65,35 @@ app.get("/jogos", async (req, res) => {
     }
 
     // Agrupar por data
-    const agrupado = {};
-    for (const bloco of blocos) {
-      if (!agrupado[bloco.data]) agrupado[bloco.data] = [];
-      agrupado[bloco.data].push(bloco.row);
-    }
+    const jogosPorData = {};
+    blocos.forEach(({ data, row }) => {
+      if (!jogosPorData[data]) {
+        jogosPorData[data] = [];
+      }
+      jogosPorData[data].push(row);
+    });
 
-    // Gerar HTML
-    let html = "";
-    for (const data of Object.keys(agrupado).sort((a, b) => {
-      const d1 = dayjs(a, "DD/MM/YYYY");
-      const d2 = dayjs(b, "DD/MM/YYYY");
-      return d1.isAfter(d2) ? 1 : -1;
-    })) {
-      html += `<h3>${data}</h3>`;
-      html += `<table><tbody>${agrupado[data].join("")}</tbody></table>`;
+    // Montar o HTML final
+    let htmlFinal = "";
+    for (const data of Object.keys(jogosPorData)) {
+      htmlFinal += `<h3>${data}</h3>`;
+      htmlFinal += `
+        <table>
+          <thead>
+            <tr><th>Hora</th><th>Evento</th><th>Canal</th></tr>
+          </thead>
+          <tbody>
+            ${jogosPorData[data].join("")}
+          </tbody>
+        </table>
+      `;
     }
 
     const styledHtml = `
       <!DOCTYPE html>
       <html lang="pt-br">
       <head>
-        <meta charset="UTF-8">
+        <meta charset="UTF-8" />
         <title>Jogos na TV</title>
         <style>
           body {
@@ -108,8 +121,8 @@ app.get("/jogos", async (req, res) => {
           table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0 40px 0;
-            background-color: #ffffff;
+            margin-bottom: 30px;
+            background-color: #fff;
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -142,7 +155,7 @@ app.get("/jogos", async (req, res) => {
       </head>
       <body>
         <h2>Jogos na TV - Atualizado automaticamente</h2>
-        ${html}
+        ${htmlFinal}
       </body>
       </html>
     `;
