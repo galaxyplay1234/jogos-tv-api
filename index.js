@@ -121,12 +121,12 @@ app.get("/jogos", async (req, res) => {
 
   /* Definindo larguras específicas das colunas */
   td:nth-child(1), th:nth-child(1) {
-    width: 15%;
+    width: 20%;
   }
 
   td:nth-child(2), td:nth-child(3), td:nth-child(4),
   th:nth-child(2), th:nth-child(3), th:nth-child(4) {
-    width: 28,33%;
+    width: 26,66%;
   }
 
   /* Responsividade */
