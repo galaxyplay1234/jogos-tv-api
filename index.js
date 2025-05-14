@@ -24,7 +24,7 @@ app.get("/jogos", async (req, res) => {
       const text = $(el).text().trim();
 
       if (tag === "h3") {
-        html += `<h3 style="margin-top:40px; color:#2c3e50;"></h3>`;
+        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
       }
 
       if (tag === "table") {
@@ -63,6 +63,7 @@ app.get("/jogos", async (req, res) => {
       <head>
         <meta charset="UTF-8">
         <title>Jogos na TV</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -124,6 +125,31 @@ app.get("/jogos", async (req, res) => {
           td.horario {
             width: 80px; /* Ajuste conforme necessário */
             text-align: center;
+          }
+
+          /* Tornar a tabela responsiva */
+          @media (max-width: 768px) {
+            table, th, td {
+              display: block;
+            }
+
+            th {
+              background-color: #2980b9;
+              color: white;
+              font-weight: 600;
+              padding: 8px;
+            }
+
+            td {
+              text-align: left;
+              padding: 8px;
+              border: none;
+            }
+
+            td.horario {
+              width: auto;
+              text-align: left;
+            }
           }
         </style>
       </head>
