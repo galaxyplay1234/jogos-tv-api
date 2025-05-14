@@ -4,7 +4,18 @@ const cheerio = require("cheerio");
 
 const app = express();
 
+let cache = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos em milissegundos
+
 app.get("/jogos", async (req, res) => {
+  const now = Date.now();
+
+  if (cache && now - lastFetchTime < CACHE_DURATION) {
+    console.log("Servindo conteúdo do cache");
+    return res.send(cache);
+  }
+
   try {
     const url = "https://tudonumclick.com/futebol/jogos-na-tv/";
     const { data } = await axios.get(url, {
@@ -107,6 +118,9 @@ app.get("/jogos", async (req, res) => {
       </body>
       </html>
     `;
+
+    cache = styledHtml;
+    lastFetchTime = now;
 
     res.send(styledHtml);
   } catch (error) {
