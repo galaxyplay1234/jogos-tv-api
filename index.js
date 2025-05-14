@@ -62,96 +62,106 @@ app.get("/jogos", async (req, res) => {
         <title>Jogos na TV</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 20px;
-            background-color: #f0f2f5;
-            color: #333;
-            margin: 0;
-          }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+  }
 
-          h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #2c3e50;
-          }
+  h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+  }
 
-          h3 {
-            margin-top: 40px;
-            margin-bottom: 10px;
-            font-size: 20px;
-            color: #2c3e50;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 5px;
-          }
+  h3 {
+    margin-top: 40px;
+    margin-bottom: 10px;
+    font-size: 20px;
+    color: #2c3e50;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 5px;
+  }
 
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0 40px 0;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            table-layout: fixed;
-          }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 40px 0;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    table-layout: fixed;
+  }
 
-          th, td {
-            padding: 12px 16px;
-            text-align: center;
-            vertical-align: middle;
-            border: 1px solid #eaeaea;
-            word-wrap: break-word;
-          }
+  th, td {
+    padding: 12px 16px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #eaeaea;
+    word-wrap: break-word;
+  }
 
-          th {
-            background-color: #2980b9;
-            color: white;
-            font-weight: 600;
-            font-size: 16px;
-          }
+  th {
+    background-color: #2980b9;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+  }
 
-          tr:nth-child(even) {
-            background-color: #f9f9f9;
-          }
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
 
-          tr:hover {
-            background-color: #eef6ff;
-          }
+  tr:hover {
+    background-color: #eef6ff;
+  }
 
-          /* Responsividade */
-          @media screen and (max-width: 768px) {
-            body {
-              padding: 10px;
-            }
+  /* Definindo larguras específicas das colunas */
+  td:nth-child(1), th:nth-child(1) {
+    width: 10%;
+  }
 
-            table, th, td {
-              font-size: 14px;
-            }
+  td:nth-child(2), td:nth-child(3), td:nth-child(4),
+  th:nth-child(2), th:nth-child(3), th:nth-child(4) {
+    width: 30%;
+  }
 
-            h2 {
-              font-size: 24px;
-            }
+  /* Responsividade */
+  @media screen and (max-width: 768px) {
+    body {
+      padding: 10px;
+    }
 
-            h3 {
-              font-size: 18px;
-            }
-          }
+    table, th, td {
+      font-size: 14px;
+    }
 
-          @media screen and (max-width: 480px) {
-            table, th, td {
-              font-size: 12px;
-            }
+    h2 {
+      font-size: 24px;
+    }
 
-            h2 {
-              font-size: 20px;
-            }
+    h3 {
+      font-size: 18px;
+    }
+  }
 
-            h3 {
-              font-size: 16px;
-            }
-          }
-        </style>
+  @media screen and (max-width: 480px) {
+    table, th, td {
+      font-size: 12px;
+    }
+
+    h2 {
+      font-size: 20px;
+    }
+
+    h3 {
+      font-size: 16px;
+    }
+  }
+</style>
       </head>
       <body>
         <h2>Jogos na TV - Atualizado automaticamente</h2>
