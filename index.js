@@ -59,7 +59,7 @@ app.get("/jogos", async (req, res) => {
       <html lang="pt-br">
       <head>
         <meta charset="UTF-8">
-        <title>Jogos na TV</title>
+        <title>Jogos na TV Portugal</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
   body {
@@ -108,7 +108,7 @@ app.get("/jogos", async (req, res) => {
   text-decoration: none;
   color: #27ae60; /* verde suave */
   font-weight: bold;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 
