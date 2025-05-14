@@ -4,18 +4,7 @@ const cheerio = require("cheerio");
 
 const app = express();
 
-let cache = null;
-let lastFetchTime = 0;
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos em milissegundos
-
 app.get("/jogos", async (req, res) => {
-  const now = Date.now();
-
-  if (cache && now - lastFetchTime < CACHE_DURATION) {
-    console.log("Servindo conteúdo do cache");
-    return res.send(cache);
-  }
-
   try {
     const url = "https://tudonumclick.com/futebol/jogos-na-tv/";
     const { data } = await axios.get(url, {
@@ -36,11 +25,30 @@ app.get("/jogos", async (req, res) => {
 
       if (tag === "h3") {
         html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
-        console.log("H3 encontrado:", text);
       }
 
       if (tag === "table") {
-        html += $.html(el);
+        const table = $(el).clone();
+
+        table.find("td").each((_, cell) => {
+          const text = $(cell).text().trim();
+          const match = text.match(/^(\d{1,2}):(\d{2})$/);
+
+          if (match) {
+            let hour = parseInt(match[1]);
+            let minute = parseInt(match[2]);
+
+            // Converte o horário para GMT-3
+            hour = (hour - 3 + 24) % 24;
+
+            const newTime = `${hour.toString().padStart(2, '0')}:${minute
+              .toString()
+              .padStart(2, '0')}`;
+            $(cell).text(newTime);
+          }
+        });
+
+        html += $.html(table);
       }
     });
 
@@ -118,9 +126,6 @@ app.get("/jogos", async (req, res) => {
       </body>
       </html>
     `;
-
-    cache = styledHtml;
-    lastFetchTime = now;
 
     res.send(styledHtml);
   } catch (error) {
