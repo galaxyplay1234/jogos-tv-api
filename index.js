@@ -108,6 +108,7 @@ app.get("/jogos", async (req, res) => {
   text-decoration: none;
   color: #27ae60; /* verde suave */
   font-weight: bold;
+  font-size: 12px;
 }
 
 
