@@ -1,6 +1,11 @@
 const express = require("express");
 const axios = require("axios");
 const cheerio = require("cheerio");
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const app = express();
 
@@ -17,43 +22,58 @@ app.get("/jogos", async (req, res) => {
     const $ = cheerio.load(data);
     const body = $("body");
 
-    let html = "";
+    const blocos = [];
+    let dataAtual = null;
 
     body.find("h3, table").each((_, el) => {
       const tag = $(el)[0].tagName;
-      const text = $(el).text().trim();
 
       if (tag === "h3") {
-        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
+        dataAtual = $(el).text().trim();
       }
 
-      if (tag === "table") {
-        const table = $(el).clone();
+      if (tag === "table" && dataAtual) {
+        const rows = $(el).find("tr");
+        rows.each((i, row) => {
+          const cols = $(row).find("td");
+          if (cols.length > 0) {
+            let hora = $(cols[0]).text().trim();
+            const timeInUTC = dayjs.utc(`${dataAtual} ${hora}`, "DD/MM/YYYY HH:mm");
+            const timeInBR = timeInUTC.tz("America/Sao_Paulo");
+            const novaData = timeInBR.format("DD/MM/YYYY");
+            const novaHora = timeInBR.format("HH:mm");
 
-        table.find("td").each((_, cell) => {
-          const text = $(cell).text().trim();
-          const match = text.match(/^(\d{1,2}):(\d{2})$/);
+            // Substitui a hora antiga pela nova
+            $(cols[0]).text(novaHora);
 
-          if (match) {
-            let hour = parseInt(match[1]);
-            let minute = parseInt(match[2]);
-
-            // Converte o horário para GMT-4
-            hour = (hour - 4 + 24) % 24;
-
-            const newTime = `${hour.toString().padStart(2, '0')}:${minute
-              .toString()
-              .padStart(2, '0')}`;
-            $(cell).text(newTime);
+            blocos.push({ data: novaData, row: $.html(row) });
+          } else {
+            blocos.push({ data: dataAtual, row: $.html(row) });
           }
         });
-
-        html += $.html(table);
       }
     });
 
-    if (!html) {
-      return res.send("<p>Nenhum conteúdo <h3> ou <table> encontrado.</p>");
+    if (blocos.length === 0) {
+      return res.send("<p>Nenhum jogo encontrado.</p>");
+    }
+
+    // Agrupar por data
+    const agrupado = {};
+    for (const bloco of blocos) {
+      if (!agrupado[bloco.data]) agrupado[bloco.data] = [];
+      agrupado[bloco.data].push(bloco.row);
+    }
+
+    // Gerar HTML
+    let html = "";
+    for (const data of Object.keys(agrupado).sort((a, b) => {
+      const d1 = dayjs(a, "DD/MM/YYYY");
+      const d2 = dayjs(b, "DD/MM/YYYY");
+      return d1.isAfter(d2) ? 1 : -1;
+    })) {
+      html += `<h3>${data}</h3>`;
+      html += `<table><tbody>${agrupado[data].join("")}</tbody></table>`;
     }
 
     const styledHtml = `
