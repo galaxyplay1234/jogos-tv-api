@@ -4,20 +4,7 @@ const cheerio = require("cheerio");
 
 const app = express();
 
-let cache = {
-  html: null,
-  timestamp: 0,
-};
-
-const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos
-
 app.get("/jogos", async (req, res) => {
-  const agora = Date.now();
-
-  if (cache.html && agora - cache.timestamp < CACHE_DURATION) {
-    return res.send(cache.html);
-  }
-
   try {
     const url = "https://tudonumclick.com/futebol/jogos-na-tv/";
     const { data } = await axios.get(url, {
@@ -28,29 +15,17 @@ app.get("/jogos", async (req, res) => {
     });
 
     const $ = cheerio.load(data);
-    const content = $(".entry-content").children();
+    const body = $("body");
 
     let html = "";
 
-    const hoje = new Date();
-    const dataHoje = hoje.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric"
-    }).toLowerCase();
-
-    content.each((_, el) => {
-      const tag = $(el).prop("tagName")?.toLowerCase();
-      const texto = $(el).text().trim();
+    body.find("h3, table").each((_, el) => {
+      const tag = $(el)[0].tagName;
+      const text = $(el).text().trim();
 
       if (tag === "h3") {
-        const textoLower = texto.toLowerCase();
-
-        const ehData = /\d{1,2}( de)? (janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)( de)? \d{4}/.test(textoLower)
-                     || /\d{2}\/\d{2}\/\d{4}/.test(textoLower);
-
-        const destaque = ehData && textoLower.includes(dataHoje) ? "atual" : "";
-        html += `<h3 class="data ${destaque}">${texto}</h3>`;
+        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
+        console.log("H3 encontrado:", text);
       }
 
       if (tag === "table") {
@@ -59,7 +34,7 @@ app.get("/jogos", async (req, res) => {
     });
 
     if (!html) {
-      return res.send("<p>Conteúdo não encontrado.</p>");
+      return res.send("<p>Nenhum conteúdo <h3> ou <table> encontrado.</p>");
     }
 
     const styledHtml = `
@@ -82,23 +57,19 @@ app.get("/jogos", async (req, res) => {
             color: #2c3e50;
           }
 
-          h3.data {
+          h3 {
             margin-top: 40px;
+            margin-bottom: 10px;
             font-size: 20px;
-            color: #34495e;
+            color: #2c3e50;
             border-bottom: 2px solid #ccc;
             padding-bottom: 5px;
-          }
-
-          h3.data.atual {
-            color: #e74c3c;
-            border-color: #e74c3c;
           }
 
           table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin: 10px 0 40px 0;
             background-color: #ffffff;
             border-radius: 8px;
             overflow: hidden;
@@ -136,9 +107,6 @@ app.get("/jogos", async (req, res) => {
       </body>
       </html>
     `;
-
-    cache.html = styledHtml;
-    cache.timestamp = agora;
 
     res.send(styledHtml);
   } catch (error) {
