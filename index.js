@@ -1,6 +1,6 @@
 const express = require("express");
 const axios = require("axios");
-const cheerio = "cheerio";
+const cheerio = require("cheerio");
 
 const app = express();
 
@@ -41,8 +41,8 @@ app.get("/jogos", async (req, res) => {
             // Converte o horário para GMT-4
             hour = (hour - 4 + 24) % 24;
 
-            const newTime = `${hour}:${minute < 10 ? "0" + minute : minute}`;
-            $(cell).text(newTime);
+            const newTime = `${hour}:${minute < 10 ? '0' : ''}${minute}`; // Ajusta a hora com 2 dígitos se necessário
+            $(cell).text(newTime); // Substitui o texto da célula com o horário ajustado
           }
         });
 
@@ -67,6 +67,7 @@ app.get("/jogos", async (req, res) => {
             padding: 20px;
             background-color: #f0f2f5;
             color: #333;
+            margin: 0;
           }
 
           h2 {
@@ -118,36 +119,36 @@ app.get("/jogos", async (req, res) => {
             background-color: #eef6ff;
           }
 
-          /* Definindo as larguras das colunas em porcentagem */
-          td.horario {
-            width: 10%;
-          }
-
-          td.equipes, td.outros {
-            width: 30%;
-          }
-
           /* Responsividade */
-          @media (max-width: 768px) {
+          @media screen and (max-width: 768px) {
+            body {
+              padding: 10px;
+            }
+
             table, th, td {
-              display: block;
+              font-size: 14px;
             }
 
-            th {
-              background-color: #2980b9;
-              color: white;
-              font-weight: 600;
-              padding: 8px;
+            h2 {
+              font-size: 24px;
             }
 
-            td {
-              text-align: left;
-              padding: 8px;
-              border: none;
+            h3 {
+              font-size: 18px;
+            }
+          }
+
+          @media screen and (max-width: 480px) {
+            table, th, td {
+              font-size: 12px;
             }
 
-            td.horario, td.equipes, td.outros {
-              width: 100%;  /* Faz com que as colunas se ajustem quando em dispositivos pequenos */
+            h2 {
+              font-size: 20px;
+            }
+
+            h3 {
+              font-size: 16px;
             }
           }
         </style>
