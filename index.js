@@ -1,3 +1,9 @@
+const express = require("express");
+const axios = require("axios");
+const cheerio = require("cheerio");
+
+const app = express();
+
 app.get("/jogos", async (req, res) => {
   try {
     const url = "https://tudonumclick.com/futebol/jogos-na-tv/";
@@ -11,54 +17,41 @@ app.get("/jogos", async (req, res) => {
     const $ = cheerio.load(data);
     const body = $("body");
 
-    const jogosPorData = {};
-    let dataAtual = "";
+    let html = "";
 
     body.find("h3, table").each((_, el) => {
       const tag = $(el)[0].tagName;
+      const text = $(el).text().trim();
 
       if (tag === "h3") {
-        dataAtual = $(el).text().trim();
-        jogosPorData[dataAtual] = "";
+        html += `<h3 style="margin-top:40px; color:#2c3e50;">${text}</h3>`;
       }
 
-      if (tag === "table" && dataAtual) {
+      if (tag === "table") {
         const table = $(el).clone();
 
-        // Ajuste de horário para GMT-4
         table.find("td").each((_, cell) => {
-          const texto = $(cell).text().trim();
-          const match = texto.match(/^(\d{1,2}):(\d{2})$/);
+          const text = $(cell).text().trim();
+          const match = text.match(/^(\d{1,2}):(\d{2})$/);
 
           if (match) {
-            let hour = (parseInt(match[1]) - 4 + 24) % 24;
+            let hour = parseInt(match[1]);
             let minute = parseInt(match[2]);
-            const newTime = `${hour}:${minute < 10 ? "0" : ""}${minute}`;
-            $(cell).text(newTime);
+
+            // Converte o horário para GMT-4
+            hour = (hour - 4 + 24) % 24;
+
+            const newTime = `${hour}:${minute < 10 ? '0' : ''}${minute}`; // Ajusta a hora com 2 dígitos se necessário
+            $(cell).text(newTime); // Substitui o texto da célula com o horário ajustado
           }
         });
 
-        jogosPorData[dataAtual] += $.html(table);
+        html += $.html(table);
       }
     });
 
-    if (Object.keys(jogosPorData).length === 0) {
-      return res.send("<p>Nenhum conteúdo encontrado.</p>");
-    }
-
-    let menu = '';
-    let conteudo = '';
-    let primeira = true;
-
-    for (const [data, tablesHtml] of Object.entries(jogosPorData)) {
-      const id = data.replace(/\s+/g, '-').toLowerCase();
-      menu += `<li onclick="mostrarTab('${id}')" class="${primeira ? 'ativo' : ''}">${data}</li>`;
-      conteudo += `
-        <div class="tab-content" id="tab-${id}" style="display:${primeira ? 'block' : 'none'};">
-          <h3>${data}</h3>
-          ${tablesHtml}
-        </div>`;
-      primeira = false;
+    if (!html) {
+      return res.send("<p>Nenhum conteúdo <h3> ou <table> encontrado.</p>");
     }
 
     const styledHtml = `
@@ -66,129 +59,122 @@ app.get("/jogos", async (req, res) => {
       <html lang="pt-br">
       <head>
         <meta charset="UTF-8">
-        <title>Jogos na TV</title>
+        <title>Jogos na TV Portugal</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body {
-            font-family: 'Segoe UI', sans-serif;
-            margin: 0;
-            background: #f0f2f5;
-            display: flex;
-            min-height: 100vh;
-          }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+  }
 
-          .menu-lateral {
-            width: 200px;
-            background: #2c3e50;
-            color: white;
-            padding: 20px 0;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-          }
+  h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+  }
 
-          .menu-lateral ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-          }
+  h3 {
+    margin-top: 40px;
+    margin-bottom: 10px;
+    font-size: 20px;
+    color: #2c3e50;
+    border-bottom: 2px solid #ccc;
+    padding-bottom: 5px;
+  }
 
-          .menu-lateral li {
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: background 0.3s;
-          }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 40px 0;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    table-layout: fixed;
+  }
 
-          .menu-lateral li:hover,
-          .menu-lateral li.ativo {
-            background: #34495e;
-          }
+  th, td {
+    padding: 12px 16px;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #eaeaea;
+    word-wrap: break-word;
+  }
+  
+  td a {
+  text-decoration: none;
+  color: #27ae60; /* verde suave */
+  font-weight: bold;
+  font-size: 10px;
+}
 
-          .conteudo {
-            flex: 1;
-            padding: 20px;
-          }
 
-          .tab-content {
-            display: none;
-          }
 
-          h3 {
-            font-size: 20px;
-            color: #2c3e50;
-            margin-top: 0;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 5px;
-          }
+  th {
+    background-color: #2980b9;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+  }
 
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0 40px 0;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            table-layout: fixed;
-          }
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
 
-          th, td {
-            padding: 12px 16px;
-            text-align: center;
-            vertical-align: middle;
-            border: 1px solid #eaeaea;
-            word-wrap: break-word;
-          }
+  tr:hover {
+    background-color: #eef6ff;
+  }
 
-          td a {
-            text-decoration: none;
-            color: #27ae60;
-            font-weight: bold;
-            font-size: 10px;
-          }
+  /* Definindo larguras específicas das colunas */
+  td:nth-child(1), th:nth-child(1) {
+    width: 18%;
+  }
 
-          th {
-            background-color: #2980b9;
-            color: white;
-            font-weight: 600;
-            font-size: 16px;
-          }
+  td:nth-child(2), td:nth-child(3), td:nth-child(4),
+  th:nth-child(2), th:nth-child(3), th:nth-child(4) {
+    width: 27.33%;
+  }
 
-          tr:nth-child(even) {
-            background-color: #f9f9f9;
-          }
+  /* Responsividade */
+  @media screen and (max-width: 768px) {
+    body {
+      padding: 10px;
+    }
 
-          tr:hover {
-            background-color: #eef6ff;
-          }
+    table, th, td {
+      font-size: 14px;
+    }
 
-          @media screen and (max-width: 768px) {
-            .menu-lateral {
-              display: none;
-            }
-            .conteudo {
-              padding: 10px;
-            }
-            th, td {
-              font-size: 14px;
-            }
-          }
-        </style>
-        <script>
-          function mostrarTab(id) {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.menu-lateral li').forEach(el => el.classList.remove('ativo'));
-            document.getElementById('tab-' + id).style.display = 'block';
-            event.target.classList.add('ativo');
-          }
-        </script>
+    h2 {
+      font-size: 24px;
+    }
+
+    h3 {
+      font-size: 18px;
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    table, th, td {
+      font-size: 12px;
+    }
+
+    h2 {
+      font-size: 17px;
+    }
+
+    h3 {
+      font-size: 15px;
+    }
+  }
+</style>
       </head>
       <body>
-        <div class="menu-lateral">
-          <ul>${menu}</ul>
-        </div>
-        <div class="conteudo">
-          <h2>Jogos na TV - Atualizado automaticamente</h2>
-          ${conteudo}
-        </div>
+        <h2>Jogos na TV Portugal - Atualizado automaticamente</h2>
+        ${html}
       </body>
       </html>
     `;
@@ -199,3 +185,9 @@ app.get("/jogos", async (req, res) => {
     res.status(500).send("Erro ao buscar dados.");
   }
 });
+
+app.get("/", (req, res) => {
+  res.send("API funcionando. Acesse <a href='/jogos'>/jogos</a>");
+});
+
+module.exports = app;
