@@ -154,17 +154,17 @@ app.get("/jogos", async (req, res) => {
     }
 
     h2 {
-      font-size: 20px;
+      font-size: 17px;
     }
 
     h3 {
-      font-size: 16px;
+      font-size: 15px;
     }
   }
 </style>
       </head>
       <body>
-        <h2>Jogos na TV - Atualizado automaticamente</h2>
+        <h2>Jogos na TV Portugal - Atualizado automaticamente</h2>
         ${html}
       </body>
       </html>
