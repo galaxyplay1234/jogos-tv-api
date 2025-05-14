@@ -106,13 +106,11 @@ app.get("/jogos", async (req, res) => {
   
   td a {
   text-decoration: none;
-  color: #2ecc71; /* verde suave */
+  color: #27ae60; /* verde suave */
   font-weight: bold;
 }
 
-td a:hover {
-  color: #27ae60; /* verde um pouco mais escuro ao passar o mouse */
-}
+
 
   th {
     background-color: #2980b9;
