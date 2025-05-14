@@ -1,6 +1,6 @@
 const express = require("express");
 const axios = require("axios");
-const cheerio = require("cheerio");
+const cheerio = "cheerio";
 
 const app = express();
 
@@ -43,9 +43,6 @@ app.get("/jogos", async (req, res) => {
 
             const newTime = `${hour}:${minute < 10 ? "0" + minute : minute}`;
             $(cell).text(newTime);
-
-            // Adiciona a classe "horario" para ajustar a largura
-            $(cell).addClass('horario');
           }
         });
 
@@ -121,13 +118,16 @@ app.get("/jogos", async (req, res) => {
             background-color: #eef6ff;
           }
 
-          /* Estilo para a coluna de horário */
+          /* Definindo as larguras das colunas em porcentagem */
           td.horario {
-            width: 80px; /* Ajuste conforme necessário */
-            text-align: center;
+            width: 10%;
           }
 
-          /* Tornar a tabela responsiva */
+          td.equipes, td.outros {
+            width: 30%;
+          }
+
+          /* Responsividade */
           @media (max-width: 768px) {
             table, th, td {
               display: block;
@@ -146,9 +146,8 @@ app.get("/jogos", async (req, res) => {
               border: none;
             }
 
-            td.horario {
-              width: auto;
-              text-align: left;
+            td.horario, td.equipes, td.outros {
+              width: 100%;  /* Faz com que as colunas se ajustem quando em dispositivos pequenos */
             }
           }
         </style>
