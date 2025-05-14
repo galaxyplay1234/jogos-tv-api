@@ -38,8 +38,8 @@ app.get("/jogos", async (req, res) => {
             let hour = parseInt(match[1]);
             let minute = parseInt(match[2]);
 
-            // Converte o horário para GMT-3
-            hour = (hour - 3 + 24) % 24;
+            // Converte o horário para GMT-4
+            hour = (hour - 4 + 24) % 24;
 
             const newTime = `${hour.toString().padStart(2, '0')}:${minute
               .toString()
